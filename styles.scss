@@ -525,7 +525,7 @@ button {
 	gap: 8px;
 	margin-top: 8px;
 }
-.expense-form input {
+.expense-form input:not([type="checkbox"]) {
 	min-width: 0;
 	width: 100%;
 	padding: 10px;
@@ -535,9 +535,16 @@ button {
 	color: $text;
 	outline: 0;
 }
-.expense-form input:focus {
+.expense-form input:not([type="checkbox"]):focus {
 	border-color: $accent;
 }
+.installment-toggle { display: flex; align-items: center; gap: 8px; color: $muted; font-size: 12px; cursor: pointer; }
+.installment-toggle input { accent-color: $accent; }
+.installment-options { display: grid; grid-template-columns: minmax(0, 1fr) minmax(90px, .7fr); gap: 8px; }
+.installment-options[hidden] { display: none; }
+.installment-field { display: grid; gap: 5px; color: $muted; font-size: 10px; }
+.installment-field input { color-scheme: dark; }
+.expense-description { min-width: 0; }
 .expense-form-actions {
 	grid-column: 1/-1;
 	display: flex;

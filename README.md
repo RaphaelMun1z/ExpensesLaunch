@@ -12,6 +12,10 @@ Abra `index.html` com Live Server ou outro servidor HTTP local.
 
 Os dados ficam no localStorage. Use os botões de exportação e importação para fazer backup em JSON.
 
+Ao adicionar uma despesa, marque **Parcelar em vários meses** para repetir o
+valor mensal a partir do mês atual. O app cria automaticamente a categoria
+correspondente nos meses necessários e identifica cada parcela na listagem.
+
 ## Navegação SPA
 
 O app usa uma única base em `index.html`. O cabeçalho e o rodapé permanecem
@@ -26,19 +30,15 @@ redireciona para o Analítico da SPA.
 
 ## Analítico
 
-- Linha e área para evolução de gastos e saldo em janelas de 6 ou 12 meses.
-- Rosca para participação das categorias e filtro dos lançamentos.
-- Barras divergentes para comparar categorias com o mês anterior, pelo nome
-  da categoria, mesmo quando seus identificadores são diferentes.
-- Cascata para mostrar como as categorias consomem o saldo inicial.
+- Gráfico de setores para participação das categorias no mês selecionado.
+- Gráfico de linhas para acompanhar gastos e restante em janelas de 6 ou 12 meses.
+- Barras para comparar os gastos acumulados por categoria no período selecionado.
 - Destaques da maior variação, do maior lançamento e da média mensal anterior.
 - Busca, filtro e ordenação dos lançamentos do mês.
 
 Meses sem registros não viram gastos fictícios no gráfico. A média histórica
 considera apenas meses anteriores com despesas dentro da janela selecionada.
-A cascata ordena categorias por valor e não representa uma sequência diária:
-os registros atuais não possuem uma data individual de lançamento.
-Sem saldo configurado, o restante e a cascata indicam essa ausência.
+Sem saldo configurado, o gráfico não inventa valores de restante.
 
 O cabeçalho permite editar o saldo inicial, duplicar categorias e importar ou
 exportar dados nas duas áreas. A leitura dos gráficos não altera os registros.

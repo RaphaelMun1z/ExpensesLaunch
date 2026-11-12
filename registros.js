@@ -104,7 +104,7 @@ export class RegistrosView {
             linha.className = 'expense-item';
             const descricao = document.createElement('span');
             descricao.className = 'expense-description';
-            descricao.textContent = item.descricao;
+            descricao.textContent = item.parcelamento ? `${item.descricao} (${item.parcelamento.numero}/${item.parcelamento.total})` : item.descricao;
             const valor = document.createElement('strong');
             valor.textContent = this.moeda.format(item.valor);
             linha.append(descricao, valor, this.botao('close', 'Remover despesa', () => { this.controle.removerDespesa(this.mes, categoria.id, item.id); this.aoAlterarDados(); }));
@@ -132,6 +132,32 @@ export class RegistrosView {
         valorInput.setAttribute('aria-label', 'Valor da despesa');
         valorInput.required = true;
         valorInput.addEventListener('input', () => { const digitos = valorInput.value.replace(/\D/g, ''); valorInput.value = digitos ? this.moeda.format(Number(digitos) / 100) : ''; });
+        const parcelarRotulo = document.createElement('label');
+        parcelarRotulo.className = 'installment-toggle';
+        const parcelar = document.createElement('input');
+        parcelar.type = 'checkbox';
+        parcelar.setAttribute('aria-label', 'Adicionar esta despesa parcelada em vários meses');
+        const parcelarTexto = document.createElement('span');
+        parcelarTexto.textContent = 'Parcelar em vários meses';
+        parcelarRotulo.append(parcelar, parcelarTexto);
+        const opcoesParcelamento = document.createElement('div');
+        opcoesParcelamento.className = 'installment-options';
+        opcoesParcelamento.hidden = true;
+        const quantidadeRotulo = document.createElement('label');
+        quantidadeRotulo.className = 'installment-field';
+        const quantidadeLegenda = document.createElement('span');
+        quantidadeLegenda.textContent = 'Número de parcelas';
+        const quantidadeParcelas = document.createElement('input');
+        quantidadeParcelas.type = 'number';
+        quantidadeParcelas.min = '2';
+        quantidadeParcelas.max = '60';
+        quantidadeParcelas.step = '1';
+        quantidadeParcelas.value = '2';
+        quantidadeParcelas.required = true;
+        quantidadeParcelas.setAttribute('aria-label', 'Número de parcelas, de 2 a 60');
+        quantidadeRotulo.append(quantidadeLegenda, quantidadeParcelas);
+        opcoesParcelamento.append(quantidadeRotulo);
+        parcelar.addEventListener('change', () => { opcoesParcelamento.hidden = !parcelar.checked; quantidadeParcelas.required = parcelar.checked; });
         const acoesForm = document.createElement('div');
         acoesForm.className = 'expense-form-actions';
         const salvar = document.createElement('button');
@@ -154,7 +180,7 @@ export class RegistrosView {
         cancelar.append(iconeCancelar);
         cancelar.addEventListener('click', () => { form.reset(); form.hidden = true; mostrarForm.hidden = false; });
         acoesForm.append(salvar, cancelar);
-        form.append(descricaoInput, valorInput, acoesForm);
+        form.append(descricaoInput, valorInput, parcelarRotulo, opcoesParcelamento, acoesForm);
         const mostrarForm = document.createElement('button');
         mostrarForm.type = 'button';
         mostrarForm.className = 'add-expense-option';
@@ -164,7 +190,10 @@ export class RegistrosView {
             alert('Informe um valor maior que zero, como 12,50.');
             return;
         } try {
-            this.controle.adicionarDespesa(this.mes, categoria.id, descricaoInput.value, valorNumerico);
+            if (parcelar.checked)
+                this.controle.adicionarParcelamento(this.mes, categoria.nome, descricaoInput.value, valorNumerico, Number(quantidadeParcelas.value));
+            else
+                this.controle.adicionarDespesa(this.mes, categoria.id, descricaoInput.value, valorNumerico);
             this.aoAlterarDados();
         }
         catch (erro) {

@@ -59,7 +59,7 @@ export class RegistrosView {
     }
     for (const item of despesas) {
       const linha = document.createElement('div'); linha.className = 'expense-item';
-      const descricao = document.createElement('span'); descricao.className = 'expense-description'; descricao.textContent = item.descricao;
+      const descricao = document.createElement('span'); descricao.className = 'expense-description'; descricao.textContent = item.parcelamento ? `${item.descricao} (${item.parcelamento.numero}/${item.parcelamento.total})` : item.descricao;
       const valor = document.createElement('strong'); valor.textContent = this.moeda.format(item.valor);
       linha.append(descricao, valor, this.botao('close', 'Remover despesa', () => { this.controle.removerDespesa(this.mes, categoria.id, item.id); this.aoAlterarDados(); })); lista.append(linha);
     }
@@ -69,6 +69,15 @@ export class RegistrosView {
     const descricaoInput = document.createElement('input'); descricaoInput.type = 'text'; descricaoInput.maxLength = 80; descricaoInput.placeholder = 'Descrição'; descricaoInput.setAttribute('aria-label', 'Descrição da despesa'); descricaoInput.required = true;
     const valorInput = document.createElement('input'); valorInput.type = 'text'; valorInput.inputMode = 'decimal'; valorInput.placeholder = 'R$ 0,00'; valorInput.setAttribute('aria-label', 'Valor da despesa'); valorInput.required = true;
     valorInput.addEventListener('input', () => { const digitos = valorInput.value.replace(/\D/g, ''); valorInput.value = digitos ? this.moeda.format(Number(digitos) / 100) : ''; });
+    const parcelarRotulo = document.createElement('label'); parcelarRotulo.className = 'installment-toggle';
+    const parcelar = document.createElement('input'); parcelar.type = 'checkbox'; parcelar.setAttribute('aria-label', 'Adicionar esta despesa parcelada em vários meses');
+    const parcelarTexto = document.createElement('span'); parcelarTexto.textContent = 'Parcelar em vários meses'; parcelarRotulo.append(parcelar, parcelarTexto);
+    const opcoesParcelamento = document.createElement('div'); opcoesParcelamento.className = 'installment-options'; opcoesParcelamento.hidden = true;
+    const quantidadeRotulo = document.createElement('label'); quantidadeRotulo.className = 'installment-field';
+    const quantidadeLegenda = document.createElement('span'); quantidadeLegenda.textContent = 'Número de parcelas';
+    const quantidadeParcelas = document.createElement('input'); quantidadeParcelas.type = 'number'; quantidadeParcelas.min = '2'; quantidadeParcelas.max = '60'; quantidadeParcelas.step = '1'; quantidadeParcelas.value = '2'; quantidadeParcelas.required = true; quantidadeParcelas.setAttribute('aria-label', 'Número de parcelas, de 2 a 60'); quantidadeRotulo.append(quantidadeLegenda, quantidadeParcelas);
+    opcoesParcelamento.append(quantidadeRotulo);
+    parcelar.addEventListener('change', () => { opcoesParcelamento.hidden = !parcelar.checked; quantidadeParcelas.required = parcelar.checked; });
     const acoesForm = document.createElement('div'); acoesForm.className = 'expense-form-actions';
     const salvar = document.createElement('button'); salvar.type = 'submit'; salvar.className = 'expense-save-button'; salvar.title = 'Salvar despesa'; salvar.setAttribute('aria-label', 'Salvar despesa');
     const iconeSalvar = document.createElement('span'); iconeSalvar.className = 'material-symbols-rounded'; iconeSalvar.textContent = 'check'; salvar.append(iconeSalvar);
@@ -76,10 +85,10 @@ export class RegistrosView {
     const iconeCancelar = document.createElement('span'); iconeCancelar.className = 'material-symbols-rounded'; iconeCancelar.textContent = 'close'; cancelar.append(iconeCancelar);
     cancelar.addEventListener('click', () => { form.reset(); form.hidden = true; mostrarForm.hidden = false; });
     acoesForm.append(salvar, cancelar);
-    form.append(descricaoInput, valorInput, acoesForm);
+    form.append(descricaoInput, valorInput, parcelarRotulo, opcoesParcelamento, acoesForm);
     const mostrarForm = document.createElement('button'); mostrarForm.type = 'button'; mostrarForm.className = 'add-expense-option'; mostrarForm.textContent = '＋ Adicionar despesa';
     mostrarForm.addEventListener('click', () => { form.hidden = false; mostrarForm.hidden = true; descricaoInput.focus(); });
-    form.addEventListener('submit', e => { e.preventDefault(); const valorNumerico = this.converterNumero(valorInput.value); if (valorNumerico === null || valorNumerico <= 0) { alert('Informe um valor maior que zero, como 12,50.'); return; } try { this.controle.adicionarDespesa(this.mes, categoria.id, descricaoInput.value, valorNumerico); this.aoAlterarDados(); } catch (erro) { alert(erro instanceof Error ? erro.message : 'Erro ao adicionar.'); } });
+    form.addEventListener('submit', e => { e.preventDefault(); const valorNumerico = this.converterNumero(valorInput.value); if (valorNumerico === null || valorNumerico <= 0) { alert('Informe um valor maior que zero, como 12,50.'); return; } try { if (parcelar.checked) this.controle.adicionarParcelamento(this.mes, categoria.nome, descricaoInput.value, valorNumerico, Number(quantidadeParcelas.value)); else this.controle.adicionarDespesa(this.mes, categoria.id, descricaoInput.value, valorNumerico); this.aoAlterarDados(); } catch (erro) { alert(erro instanceof Error ? erro.message : 'Erro ao adicionar.'); } });
     cartao.append(tituloCartao, lista, mostrarForm, form); conteudo.append(cartao); coluna.append(head, conteudo, total); return coluna;
   }
   private botao(icone: string, descricao: string, acao: () => void): HTMLButtonElement {

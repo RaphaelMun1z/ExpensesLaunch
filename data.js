@@ -97,6 +97,35 @@ export class ControleGastos {
         itens.push({ id: crypto.randomUUID(), descricao: descricao.trim(), valor: Math.round(valor * 100) / 100 });
         this.salvar();
     }
+    adicionarParcelamento(mesInicial, nomeCategoria, descricao, valorParcela, quantidade) {
+        if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(mesInicial))
+            throw new Error('Informe um mês inicial válido.');
+        if (!descricao.trim())
+            throw new Error('Informe uma descrição.');
+        if (!Number.isFinite(valorParcela) || valorParcela <= 0)
+            throw new Error('Informe um valor de parcela maior que zero.');
+        if (!Number.isInteger(quantidade) || quantidade < 2 || quantidade > 60)
+            throw new Error('Escolha de 2 a 60 parcelas.');
+        if (!nomeCategoria.trim())
+            throw new Error('Categoria não encontrada.');
+        const nomeNormalizado = nomeCategoria.trim().replace(/\s+/g, ' ').toLocaleLowerCase('pt-BR');
+        const parcela = Math.round(valorParcela * 100) / 100;
+        const serie = crypto.randomUUID();
+        const [anoInicial, numeroInicial] = mesInicial.split('-').map(Number);
+        for (let indice = 0; indice < quantidade; indice++) {
+            const data = new Date(anoInicial, numeroInicial - 1 + indice, 1);
+            const mes = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+            const categoriasMes = this.dados.categorias[mes] ??= [];
+            let categoria = categoriasMes.find(c => c.nome.trim().replace(/\s+/g, ' ').toLocaleLowerCase('pt-BR') === nomeNormalizado);
+            if (!categoria) {
+                categoria = { id: crypto.randomUUID(), nome: nomeCategoria };
+                categoriasMes.push(categoria);
+            }
+            const itens = (this.dados.gastos[mes] ??= {})[categoria.id] ??= [];
+            itens.push({ id: crypto.randomUUID(), descricao: descricao.trim(), valor: parcela, parcelamento: { id: serie, numero: indice + 1, total: quantidade } });
+        }
+        this.salvar();
+    }
     removerDespesa(mes, categoriaId, despesaId) {
         const itens = this.dados.gastos[mes]?.[categoriaId];
         if (itens)
