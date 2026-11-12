@@ -145,6 +145,20 @@ export class ControleGastos {
         categoria.nome = nome.trim();
         this.salvar();
     }
+    reordenarCategorias(mes, origemId, destinoId) {
+        const categorias = this.dados.categorias[mes];
+        if (!categorias || origemId === destinoId)
+            return false;
+        const origem = categorias.findIndex(c => c.id === origemId);
+        const destino = categorias.findIndex(c => c.id === destinoId);
+        if (origem < 0 || destino < 0)
+            return false;
+        const [categoria] = categorias.splice(origem, 1);
+        const novaPosicao = categorias.findIndex(c => c.id === destinoId);
+        categorias.splice(novaPosicao, 0, categoria);
+        this.salvar();
+        return true;
+    }
     remover(mes, id) {
         this.dados.categorias[mes] = this.categorias(mes).filter(c => c.id !== id);
         delete this.dados.gastos[mes]?.[id];

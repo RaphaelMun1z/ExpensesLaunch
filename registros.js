@@ -71,10 +71,16 @@ export class RegistrosView {
             const nome = document.createElement('strong');
             nome.textContent = categoria.nome;
             titulo.append(nome);
+            const alca = document.createElement('span');
+            alca.className = 'material-symbols-rounded category-drag-handle';
+            alca.textContent = 'drag_indicator';
+            alca.setAttribute('aria-hidden', 'true');
+            titulo.prepend(alca);
             acoes.append(this.botao('edit', 'Renomear categoria', () => this.abrir(categoria)), this.botao('close', 'Excluir categoria', () => { if (confirm(`Excluir ${categoria.nome} deste mês?`)) {
                 this.controle.remover(this.mes, categoria.id);
                 this.aoAlterarDados();
             } }));
+            this.configurarReordenacao(head, coluna, categoria.id, categoria.nome);
         }
         head.append(titulo, acoes);
         const conteudo = document.createElement('div');
@@ -203,6 +209,41 @@ export class RegistrosView {
         conteudo.append(cartao);
         coluna.append(head, conteudo, total);
         return coluna;
+    }
+    configurarReordenacao(head, coluna, categoriaId, nome) {
+        head.draggable = true;
+        head.title = 'Arraste para mudar a posição de ' + nome;
+        head.setAttribute('aria-label', 'Cabeçalho arrastável da categoria ' + nome);
+        head.addEventListener('dragstart', evento => {
+            if (evento.target.closest('button, input')) {
+                evento.preventDefault();
+                return;
+            }
+            evento.dataTransfer?.setData('text/plain', categoriaId);
+            if (evento.dataTransfer)
+                evento.dataTransfer.effectAllowed = 'move';
+            coluna.classList.add('category-dragging');
+        });
+        head.addEventListener('dragover', evento => {
+            evento.preventDefault();
+            if (evento.dataTransfer)
+                evento.dataTransfer.dropEffect = 'move';
+            coluna.classList.add('category-drop-target');
+        });
+        head.addEventListener('dragleave', evento => {
+            if (!head.contains(evento.relatedTarget))
+                coluna.classList.remove('category-drop-target');
+        });
+        head.addEventListener('drop', evento => {
+            evento.preventDefault();
+            coluna.classList.remove('category-drop-target');
+            const origemId = evento.dataTransfer?.getData('text/plain');
+            if (origemId && this.controle.reordenarCategorias(this.mes, origemId, categoriaId))
+                this.aoAlterarDados();
+        });
+        head.addEventListener('dragend', () => {
+            this.element.querySelectorAll('.category-dragging, .category-drop-target').forEach(item => item.classList.remove('category-dragging', 'category-drop-target'));
+        });
     }
     botao(icone, descricao, acao) {
         const b = document.createElement('button');

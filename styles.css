@@ -188,7 +188,12 @@ button {
 	align-items: center;
 	gap: 10px;
 	background: #202228;
+	cursor: grab;
 }
+.column-head:active { cursor: grabbing; }
+.category-drag-handle { color: #9caac0; font-size: 18px; vertical-align: middle; margin-right: 5px; }
+.category-dragging { opacity: .55; }
+.category-drop-target .column-head { background: #292c33; border-top: 2px solid #ff351f; }
 .column-head strong {
 	font-size: 15px;
 	overflow: hidden;

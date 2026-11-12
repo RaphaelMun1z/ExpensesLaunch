@@ -43,7 +43,9 @@ export class RegistrosView {
       acoes.append(this.botao('check', 'Salvar categoria', () => this.salvarCategoria()), this.botao('close', 'Cancelar', () => this.cancelarEdicao()));
     } else {
       const nome = document.createElement('strong'); nome.textContent = categoria.nome; titulo.append(nome);
+      const alca = document.createElement('span'); alca.className = 'material-symbols-rounded category-drag-handle'; alca.textContent = 'drag_indicator'; alca.setAttribute('aria-hidden', 'true'); titulo.prepend(alca);
       acoes.append(this.botao('edit', 'Renomear categoria', () => this.abrir(categoria)), this.botao('close', 'Excluir categoria', () => { if (confirm(`Excluir ${categoria.nome} deste mês?`)) { this.controle.remover(this.mes, categoria.id); this.aoAlterarDados(); } }));
+      this.configurarReordenacao(head, coluna, categoria.id, categoria.nome);
     }
     head.append(titulo, acoes);
     const conteudo = document.createElement('div'); conteudo.className = 'column-content';
@@ -90,6 +92,34 @@ export class RegistrosView {
     mostrarForm.addEventListener('click', () => { form.hidden = false; mostrarForm.hidden = true; descricaoInput.focus(); });
     form.addEventListener('submit', e => { e.preventDefault(); const valorNumerico = this.converterNumero(valorInput.value); if (valorNumerico === null || valorNumerico <= 0) { alert('Informe um valor maior que zero, como 12,50.'); return; } try { if (parcelar.checked) this.controle.adicionarParcelamento(this.mes, categoria.nome, descricaoInput.value, valorNumerico, Number(quantidadeParcelas.value)); else this.controle.adicionarDespesa(this.mes, categoria.id, descricaoInput.value, valorNumerico); this.aoAlterarDados(); } catch (erro) { alert(erro instanceof Error ? erro.message : 'Erro ao adicionar.'); } });
     cartao.append(tituloCartao, lista, mostrarForm, form); conteudo.append(cartao); coluna.append(head, conteudo, total); return coluna;
+  }
+  private configurarReordenacao(head: HTMLElement, coluna: HTMLElement, categoriaId: string, nome: string): void {
+    head.draggable = true;
+    head.title = 'Arraste para mudar a posição de ' + nome;
+    head.setAttribute('aria-label', 'Cabeçalho arrastável da categoria ' + nome);
+    head.addEventListener('dragstart', evento => {
+      if ((evento.target as HTMLElement).closest('button, input')) { evento.preventDefault(); return; }
+      evento.dataTransfer?.setData('text/plain', categoriaId);
+      if (evento.dataTransfer) evento.dataTransfer.effectAllowed = 'move';
+      coluna.classList.add('category-dragging');
+    });
+    head.addEventListener('dragover', evento => {
+      evento.preventDefault();
+      if (evento.dataTransfer) evento.dataTransfer.dropEffect = 'move';
+      coluna.classList.add('category-drop-target');
+    });
+    head.addEventListener('dragleave', evento => {
+      if (!head.contains(evento.relatedTarget as Node | null)) coluna.classList.remove('category-drop-target');
+    });
+    head.addEventListener('drop', evento => {
+      evento.preventDefault();
+      coluna.classList.remove('category-drop-target');
+      const origemId = evento.dataTransfer?.getData('text/plain');
+      if (origemId && this.controle.reordenarCategorias(this.mes, origemId, categoriaId)) this.aoAlterarDados();
+    });
+    head.addEventListener('dragend', () => {
+      this.element.querySelectorAll('.category-dragging, .category-drop-target').forEach(item => item.classList.remove('category-dragging', 'category-drop-target'));
+    });
   }
   private botao(icone: string, descricao: string, acao: () => void): HTMLButtonElement {
     const b = document.createElement('button'); b.className = 'mini-button'; b.type = 'button'; b.title = descricao; b.setAttribute('aria-label', descricao);
