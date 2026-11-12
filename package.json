@@ -1,0 +1,1 @@
+{"name":"expenses-launch","version":"2.0.0","private":true,"scripts":{"build":"tsc && sass styles.scss styles.css","watch:ts":"tsc --watch","watch:scss":"sass --watch styles.scss styles.css"},"devDependencies":{"typescript":"^5.9.3","sass":"^1.93.0"}}
