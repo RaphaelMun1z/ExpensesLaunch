@@ -8,6 +8,7 @@ yarn-debug.log*
 pnpm-debug.log*
 *.tmp
 *.temp
+*.css.map
 
 # Saídas de build e cobertura
 dist/

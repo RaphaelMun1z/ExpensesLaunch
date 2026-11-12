@@ -8,7 +8,19 @@ Abra `index.html` com Live Server ou outro servidor HTTP local.
 
 ## Alterar código
 
-`npm install` e `npm run build` para compilar TypeScript e SCSS.
+`npm ci` e `npm run build` para compilar TypeScript e SCSS.
+
+## Publicar no GitHub Pages
+
+O workflow em `.github/workflows/pages.yml` compila o app e publica os arquivos
+estáticos automaticamente a cada push para `main`. Para habilitar a publicação,
+abra **Settings → Pages** no repositório e escolha **GitHub Actions** em
+**Build and deployment → Source**. Também é possível iniciar a publicação
+manualmente na aba **Actions**, executando **Deploy GitHub Pages**.
+
+Depois que a execução terminar, o endereço do site aparece no ambiente
+`github-pages` da execução. A navegação usa rotas com hash e os assets são
+relativos, então funciona no endereço de projeto do GitHub Pages.
 
 Os dados ficam no localStorage. Use os botões de exportação e importação para fazer backup em JSON.
 
